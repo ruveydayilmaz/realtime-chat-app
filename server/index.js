@@ -57,8 +57,6 @@ io.on("connection", (socket) => {
 // routes
 import AuthRoute from './routes/auth.route.js'
 import UserRoute from './routes/user.route.js'
-import PostRoute from './routes/post.route.js'
-import UploadRoute from './routes/upload.route.js'
 import ChatRoute from './routes/chat.route.js'
 import MessageRoute from './routes/message.route.js'
 
@@ -86,7 +84,5 @@ mongoose
 
 app.use('/auth', AuthRoute);
 app.use('/user', UserRoute)
-app.use('/posts', PostRoute)
-app.use('/upload', UploadRoute)
 app.use('/chat', ChatRoute)
 app.use('/message', MessageRoute)

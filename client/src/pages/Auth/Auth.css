@@ -1,0 +1,59 @@
+.Auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 4rem;
+  position: relative;
+}
+
+.title {
+  align-self: center;
+  font-size: 30px;
+}
+
+.input-div {
+  margin-bottom: 5px;
+  border-style: none;
+  background-color: var(--hrColor);
+  padding: 10px;
+  border-radius: 5px;
+  width: 200px;
+}
+
+input:focus
+{
+  outline-offset: 0px;
+  border-style: none;
+  outline: none;
+}
+
+.link {
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--turkis);
+}
+
+.authForm{
+    background-color: var(--cardColor);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-button {
+  margin-top: 20px;
+  height: 30px;
+  border-radius: 5px;
+  width: 220px;
+}

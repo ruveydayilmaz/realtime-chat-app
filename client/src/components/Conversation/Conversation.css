@@ -1,0 +1,18 @@
+.friend-list {
+    display: flex;
+    align-items: center;
+}
+
+.user-div {
+    display: flex;
+    flex-direction: column;
+    margin-left: 5px;
+}
+
+.username {
+    font-weight: 600;
+}
+
+.status {
+    font-size: 11px;
+}

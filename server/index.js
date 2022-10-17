@@ -41,6 +41,12 @@ io.on("connection", (socket) => {
     io.emit("get-users", activeUsers);
   });
 
+  // typing status
+  socket.on("typing", (data) => {
+    socket.broadcast.emit("typing", data);
+    console.log("typing: " + data)
+  });
+
   // send message to a specific user
   socket.on("send-message", (data) => {
     const { receiverId } = data;

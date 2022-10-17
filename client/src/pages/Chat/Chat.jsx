@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import ChatBox from "../../components/ChatBox/ChatBox";
 import Conversation from "../../components/Conversation/Conversation";
-import NavIcons from "../../components/Navbar/Navbar";
+import Navbar from "../../components/Navbar/Navbar";
 import "./Chat.css";
 import { useEffect } from "react";
 import { userChats } from "../../api/chat.requests";
@@ -17,6 +17,9 @@ const Chat = () => {
   const [currentChat, setCurrentChat] = useState(null);
   const [sendMessage, setSendMessage] = useState(null);
   const [receivedMessage, setReceivedMessage] = useState(null);
+  const [isTyping, setIsTyping] = useState("");
+
+  var feedback = document.getElementById('feedback');
 
   // Get the chat in chat section
   useEffect(() => {
@@ -82,6 +85,16 @@ const Chat = () => {
     );
   }, []);
 
+    // Send Message to socket server
+    useEffect(() => {
+      socket.current.on('typing', (data) => {
+        // setIsTyping(data)
+        console.log("data: " + data)
+        // TODO: i need to access this data value from ChatBox.jsx and handle it there for the typing status
+        // feedback.innerHTML = '<p><em>' + data + ' is typing</em></p>';
+      })
+    }, []);
+
 
   const checkOnlineStatus = (chat) => {
     const chatMember = chat.members.find((member) => member !== user._id);
@@ -92,7 +105,7 @@ const Chat = () => {
   return (
     <div className="Chat">
       {/* Left Side */}
-      <NavIcons socket={socket} />
+      <Navbar socket={socket} />
       <div className="Left-side-chat">
         <div className="Chat-container">
           <h2 className="list-title">Chats</h2>
@@ -103,6 +116,7 @@ const Chat = () => {
                   setCurrentChat(chat);
                 }}
               >
+                {/* <div id="feedback"></div> */}
                 <Conversation
                   data={chat}
                   currentUser={user._id}
@@ -118,6 +132,10 @@ const Chat = () => {
 
       <div className="Right-side-chat">
         <ChatBox
+          isTyping={isTyping}
+          feedback={feedback}
+          setIsTyping={setIsTyping}
+          socket={socket}
           chat={currentChat}
           currentUser={user._id}
           setSendMessage={setSendMessage}

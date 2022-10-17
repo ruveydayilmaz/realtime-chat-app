@@ -5,7 +5,7 @@ import "./Navbar.css";
 import logoutImg from "../../img/logout.png";
 import userImg from "../../img/user.png";
 
-const NavIcons = ({socket}) => {
+const Navbar = ({socket}) => {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.authReducer.authData);
 
@@ -33,4 +33,4 @@ const NavIcons = ({socket}) => {
   );
 };
 
-export default NavIcons;
+export default Navbar;

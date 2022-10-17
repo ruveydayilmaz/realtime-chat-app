@@ -7,14 +7,29 @@ import { format } from "timeago.js";
 import InputEmoji from 'react-input-emoji'
 import userImg from "../../img/user.png";
 import attach from "../../img/attach.png";
+import { useSelector } from "react-redux";
 
-const ChatBox = ({ chat, currentUser, setSendMessage,  receivedMessage }) => {
+const ChatBox = ({ chat, currentUser, setSendMessage, feedback, receivedMessage, socket, setIsTyping, isTyping }) => {
+  const { user } = useSelector((state) => state.authReducer.authData);
   const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [typing, setTyping] = useState("");
 
   const handleChange = (newMessage)=> {
-    setNewMessage(newMessage)
+    setNewMessage(newMessage.target.value)
+  }
+
+  const handleKeyUp = () => {
+    // console.log(user.firstname + "durdu")
+    // setTyping("")
+  }
+
+  const handleKeyDown = () => {
+    // console.log(user.firstname + "yaziyor")
+    // console.log(isTyping + " is typing")
+    // setTyping(isTyping + " is typing" )
+    socket.current.emit('typing', user.firstname)
   }
 
   // fetching data for header
@@ -51,7 +66,6 @@ const ChatBox = ({ chat, currentUser, setSendMessage,  receivedMessage }) => {
   useEffect(()=> {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
   },[messages])
-
 
 
   // Send Message
@@ -136,15 +150,19 @@ useEffect(()=> {
                   </div>
                 </>
               ))}
+              
             </div>
             {/* chat-sender */}
             <div className="chat-sender">
               <div onClick={() => imageRef.current.click()}>
                 <img src={attach} alt="attach" />
               </div>
-              <InputEmoji
+              <input
+                id="inputMessage"
                 value={newMessage}
                 onChange={handleChange}
+                onKeyUp={handleKeyUp}
+                onKeyDown={handleKeyDown}
               />
               <div className="send-button button" onClick = {handleSend}>Send</div>
               <input

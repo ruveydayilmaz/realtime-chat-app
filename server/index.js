@@ -4,8 +4,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import "./addRequire.js";
+const http = require('http');
 
-const io = require("socket.io")(8800, {
+const app = express();
+const server = http.createServer(app);
+
+const io = require("socket.io")(server, {
   cors: {
     origin: "http://localhost:3000",
   },
@@ -66,7 +70,6 @@ import UserRoute from './routes/user.route.js'
 import ChatRoute from './routes/chat.route.js'
 import MessageRoute from './routes/message.route.js'
 
-const app = express();
 
 
 // middleware
@@ -84,7 +87,7 @@ const PORT = process.env.PORT;
 const CONNECTION =process.env.MONGODB_CONNECTION;
 mongoose
   .connect(CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => app.listen(PORT, () => console.log(`Listening at Port ${PORT}`)))
+  .then(() => server.listen(PORT, () => console.log(`Listening at Port ${PORT}`)))
   .catch((error) => console.log(`${error} did not connect`));
 
 

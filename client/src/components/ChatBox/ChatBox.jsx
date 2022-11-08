@@ -4,12 +4,11 @@ import { addMessage, getMessages } from "../../api/message.requests";
 import { getUser } from "../../api/user.requests";
 import "./ChatBox.css";
 import { format } from "timeago.js";
-import InputEmoji from 'react-input-emoji'
 import userImg from "../../img/user.png";
 import attach from "../../img/attach.png";
 import { useSelector } from "react-redux";
 
-const ChatBox = ({ chat, currentUser, setSendMessage, feedback, receivedMessage, socket, setIsTyping, isTyping }) => {
+const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket, setIsTyping, isTyping }) => {
   const { user } = useSelector((state) => state.authReducer.authData);
   const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -61,8 +60,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, feedback, receivedMessage,
     if (chat !== null) fetchMessages();
   }, [chat]);
 
-
-  // Always scroll to last Message
+  // scroll to bottom
   useEffect(()=> {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
   },[messages])

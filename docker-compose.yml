@@ -16,10 +16,6 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    environment:
-      - "MONGODB_CONNECTION=mongodb+srv://ruveyda:i03n0rc8QhgYmBX5@cluster0.yg7gd.mongodb.net/chat-app?retryWrites=true&w=majority&ssl=true"
-      - "PORT=5000"
-      - "JWTKEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwi aWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     env_file:
       - ./server/.env
   

@@ -11,13 +11,11 @@ export const registerUser = async (req, res) => {
   const newUser = new UserModel(req.body);
   const {username} = req.body
   try {
-    // addition new
     const oldUser = await UserModel.findOne({ username });
 
     if (oldUser)
       return res.status(400).json({ message: "User already exists" });
 
-    // changed
     const user = await newUser.save();
     const token = jwt.sign(
       { username: user.username, id: user._id },
@@ -31,8 +29,6 @@ export const registerUser = async (req, res) => {
 };
 
 // Login User
-
-// Changed
 export const loginUser = async (req, res) => {
   const { username, password } = req.body;
 

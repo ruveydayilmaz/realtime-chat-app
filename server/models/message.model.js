@@ -10,6 +10,11 @@ import mongoose from "mongoose"
     text: {
         type: String
     },
+    status: {
+        type: String,
+        default: "sent",
+        enum: ["sent", "delivered", "seen"]
+    }
  },
  {
     timestamps: true

@@ -52,6 +52,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket, s
       try {
         const { data } = await getMessages(chat._id);
         setMessages(data);
+        socket.current.emit("message-seen-status", { chatId: chat._id, userId: user._id, status: "" });
       } catch (error) {
         console.log(error);
       }
@@ -73,6 +74,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket, s
       senderId : currentUser,
       text: newMessage,
       chatId: chat._id,
+      status: ""
   }
   const receiverId = chat.members.find((id)=>id!==currentUser);
   // send message to socket server
@@ -94,6 +96,8 @@ useEffect(()=> {
   console.log("Message Arrived: ", receivedMessage)
   if (receivedMessage !== null && receivedMessage.chatId === chat._id) {
     setMessages([...messages, receivedMessage]);
+
+    socket.current.emit("message-seen-status", receivedMessage);
   }
 
 },[receivedMessage])

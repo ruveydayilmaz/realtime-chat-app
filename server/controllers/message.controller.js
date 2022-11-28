@@ -24,3 +24,36 @@ export const getMessages = async (req, res) => {
     res.status(500).json(error);
   }
 };
+
+export const updateMessageStatus = async (id, status) => {
+  try {
+    if(status === "seen") {
+      const lastMessage = await MessageModel.find({chatId: id}).limit(1).sort({ $natural : -1 });
+
+      await MessageModel.updateOne(  // bu da updateMany olabilir içine de status: "delivered" yazılabilir
+        { _id: lastMessage[0]._id },
+        {
+          $set: {
+            status: status,
+          },
+        }
+      );
+    }
+    else if(status === "delivered") {
+      await MessageModel.updateMany( 
+        { 
+          userId: id,
+          status: "sent"
+        },
+        {
+          $set: {
+            status: status,
+          },
+        }
+      );
+    }
+
+  } catch (error) {
+    console.log(error.message);
+  }
+};

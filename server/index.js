@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import "./addRequire.js";
+import { updateMessageStatus } from "./controllers/message.controller.js";
 const http = require('http');
 
 const app = express();
@@ -23,7 +24,8 @@ io.on("connection", (socket) => {
     // if user is not added previously
     if (!activeUsers.some((user) => user.userId === newUserId)) {
       activeUsers.push({ userId: newUserId, socketId: socket.id });
-      console.log("New User Connected", activeUsers);
+      // console.log("New User Connected", activeUsers);
+      updateMessageStatus(newUserId, "delivered");
     }
     // send all active users to new user
     io.emit("get-users", activeUsers);
@@ -32,7 +34,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     // remove user from active users
     activeUsers = activeUsers.filter((user) => user.socketId !== socket.id);
-    console.log("User Disconnected", activeUsers);
+    // console.log("User Disconnected", activeUsers);
     // send all active users to all users
     io.emit("get-users", activeUsers);
   });
@@ -40,15 +42,16 @@ io.on("connection", (socket) => {
   socket.on("offline", () => {
     // remove user from active users
     activeUsers = activeUsers.filter((user) => user.socketId !== socket.id);
-    console.log("User Disconnected", activeUsers);
+    // console.log("User Disconnected", activeUsers);
     // send all active users to all users
     io.emit("get-users", activeUsers);
   });
 
   // typing status
   socket.on("typing", (data) => {
-    socket.broadcast.emit("typing", data);
-    console.log("typing: " + data)
+    // socket.broadcast.emit("typing", data);
+    io.to(data.receiverId).emit("typing", data);
+    // console.log("typing: " + data)
   });
 
   // send message to a specific user
@@ -56,11 +59,22 @@ io.on("connection", (socket) => {
     const { receiverId } = data;
     const user = activeUsers.find((user) => user.userId === receiverId);
     console.log("Sending from socket to :", receiverId)
+    data.status = "sent"
     console.log("Data: ", data)
     if (user) {
       io.to(user.socketId).emit("recieve-message", data);
     }
+
+    console.log("--------------------");
   });
+
+  socket.on("message-seen-status", (data) => {
+    console.log("-------SEEN-------")
+    data.status = "seen";
+    updateMessageStatus(data.chatId, data.status);
+    console.log("Message seen by: ", data)
+    io.emit("message-seen", data);
+  })
 });
 
 
@@ -87,7 +101,7 @@ const PORT = process.env.PORT;
 const CONNECTION =process.env.MONGODB_CONNECTION;
 mongoose
   .connect(CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => server.listen(PORT, () => console.log(`Listening at Port ${PORT}`)))
+  .then(() => server.listen(5001, () => console.log(`Listening at Port ${PORT}`)))
   .catch((error) => console.log(`${error} did not connect`));
 
 

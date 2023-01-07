@@ -19,10 +19,10 @@ const Navbar = ({socket}) => {
       <img 
         className="profile-picture"
         onClick={handleLogOut}         
-        src={user.profilePicture ? user.profilePicture : userImg} 
+        src={user?.profilePicture ? user?.profilePicture : userImg} 
         alt="logout" 
       />
-      <p className="first-name">{user.firstname}</p>
+      <p className="first-name">{user?.firstname}</p>
       <img 
         onClick={handleLogOut} 
         className="logout-button" 

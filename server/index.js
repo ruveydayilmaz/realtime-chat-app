@@ -6,6 +6,9 @@ import mongoose from "mongoose";
 import "./addRequire.js";
 import { updateMessageStatus } from "./controllers/message.controller.js";
 const http = require('http');
+const FileReader = require('filereader');
+
+const { writeFile } = require("fs");
 
 const app = express();
 const server = http.createServer(app);
@@ -13,10 +16,13 @@ const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
     origin: "http://localhost:3000",
+    maxHttpBufferSize: 1e8,
   },
 });
 
 let activeUsers = [];
+
+let fileShare={}
 
 io.on("connection", (socket) => {
   // add new User
@@ -75,6 +81,22 @@ io.on("connection", (socket) => {
     console.log("Message seen by: ", data)
     io.emit("message-seen", data);
   })
+
+  socket.on("upload", ({file, receiverId}) => {
+    console.log("--file: ",file);
+
+    const user = activeUsers.find((user) => user.userId === receiverId);
+    // io.to(user.socketId).emit("receive-upload", file);
+
+    console.log("okunuyor")
+    console.log("file size: ", file.size)
+
+    io.to(user.socketId).emit("receive-upload", file);
+
+
+  });
+
+
 });
 
 
@@ -101,7 +123,7 @@ const PORT = process.env.PORT;
 const CONNECTION =process.env.MONGODB_CONNECTION;
 mongoose
   .connect(CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => server.listen(5001, () => console.log(`Listening at Port ${PORT}`)))
+  .then(() => server.listen(5000, () => console.log(`Listening at Port ${PORT}`)))
   .catch((error) => console.log(`${error} did not connect`));
 
 

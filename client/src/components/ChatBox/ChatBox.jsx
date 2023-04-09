@@ -8,7 +8,7 @@ import userImg from "../../img/user.png";
 import attach from "../../img/attach.png";
 import { useSelector } from "react-redux";
 
-const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket, setIsTyping, isTyping }) => {
+const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket }) => {
   const { user } = useSelector((state) => state.authReducer.authData);
   const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -19,16 +19,12 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket, s
     setNewMessage(newMessage.target.value)
   }
 
-  const handleKeyUp = () => {
-    // console.log(user.firstname + "durdu")
-    // setTyping("")
-  }
-
   const handleKeyDown = () => {
-    // console.log(user.firstname + "yaziyor")
-    // console.log(isTyping + " is typing")
-    // setTyping(isTyping + " is typing" )
-    socket.current.emit('typing', user.firstname)
+    const receiver = chat.members.find((id)=>id!==currentUser)
+    socket.current.emit('typing', {
+      typer: user.firstname,
+      receiverId: receiver
+    })
   }
 
   // fetching data for header
@@ -64,8 +60,19 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket, s
   // scroll to bottom
   useEffect(()=> {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
-  },[messages])
+  },[messages]);
 
+  // fetch messages
+  useEffect(() => {
+    socket.current?.on("get-typing", (data) => {
+      setTyping(data.typer + ' is typing..')
+
+      // Clear the typing status after 2 seconds
+      setTimeout(() => {
+        setTyping('')
+      }, 2000);
+    });
+  }, []);
 
   // Send Message
   const handleSend = async(e)=> {
@@ -152,9 +159,9 @@ useEffect(()=> {
                   </div>
                 </>
               ))}
-              
             </div>
             {/* chat-sender */}
+            <p>{typing}</p>
             <div className="chat-sender">
               <div onClick={() => imageRef.current.click()}>
                 <img src={attach} alt="attach" />
@@ -163,7 +170,6 @@ useEffect(()=> {
                 id="inputMessage"
                 value={newMessage}
                 onChange={handleChange}
-                onKeyUp={handleKeyUp}
                 onKeyDown={handleKeyDown}
               />
               <div className="send-button button" onClick = {handleSend}>Send</div>

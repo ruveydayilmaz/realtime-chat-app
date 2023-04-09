@@ -55,9 +55,11 @@ io.on("connection", (socket) => {
 
   // typing status
   socket.on("typing", (data) => {
-    // socket.broadcast.emit("typing", data);
-    io.to(data.receiverId).emit("typing", data);
-    // console.log("typing: " + data)
+    const user = activeUsers.find((user) => user.userId === data.receiverId);
+    if(user) {
+      io.to(user.socketId).emit("get-typing", data);
+      // console.log("typing: " + data)      
+    }
   });
 
   // send message to a specific user

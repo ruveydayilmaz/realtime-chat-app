@@ -83,21 +83,14 @@ const Chat = () => {
   }, []);
 
   useEffect(() => {
-    socket.current.on("receive-upload", (data) => {
-      console.log(data)
-      setReceivedMessage(data);
 
-      if(Array.isArray(data)) {
-        const blob = new Blob(data);
-        console.log(blob)
-        const url = URL.createObjectURL(blob);
-        console.log(url)
-        return <img src={url} />
-      } else {
-        console.log(data);
-      }
-    }
-    );
+    socket.current.on("receive-upload", (data) => {
+      console.log(data);
+      const blob = new Blob([data.file]);
+      const url = URL.createObjectURL(blob);
+      setReceivedMessage(<img src={url} />);
+    });
+
   }, []);
 
   const checkOnlineStatus = (chat) => {

@@ -47,7 +47,7 @@ io.on("connection", (socket) => {
 
   socket.on("offline", () => {
     // remove user from active users
-    activeUsers = activeUsers.filter((user) => user.socketId !== socket.id);
+    // activeUsers = activeUsers.filter((user) => user.socketId !== socket.id);
     // console.log("User Disconnected", activeUsers);
     // send all active users to all users
     io.emit("get-users", activeUsers);
@@ -84,17 +84,15 @@ io.on("connection", (socket) => {
     io.emit("message-seen", data);
   })
 
-  socket.on("upload", ({file, receiverId}) => {
+  socket.on("upload", ({file, receiverId, chatId}) => {
     console.log("--file: ",file);
 
     const user = activeUsers.find((user) => user.userId === receiverId);
     // io.to(user.socketId).emit("receive-upload", file);
 
-    console.log("okunuyor")
-    console.log("file size: ", file.size)
-
-    io.to(user.socketId).emit("receive-upload", file);
-
+    if(user) {
+      io.to(user.socketId).emit("receive-upload", {file, chatId});      
+    }
 
   });
 

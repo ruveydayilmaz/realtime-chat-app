@@ -3,7 +3,10 @@ import { addMessage, getMessages } from '../controllers/message.controller.js';
 
 const router = express.Router();
 
-router.post('/', addMessage);
+const multer = require('multer');
+const upload = multer({storage: multer.memoryStorage()});
+
+router.post('/', upload.single("file"), addMessage);
 
 router.get('/:chatId', getMessages);
 

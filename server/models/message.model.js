@@ -10,6 +10,9 @@ import mongoose from "mongoose"
     text: {
         type: String
     },
+    file: {
+        type: Buffer
+    },
     status: {
         type: String,
         default: "sent",

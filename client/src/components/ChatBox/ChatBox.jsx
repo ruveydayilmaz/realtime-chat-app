@@ -7,25 +7,33 @@ import { format } from "timeago.js";
 import userImg from "../../img/user.png";
 import attach from "../../img/attach.png";
 import { useSelector } from "react-redux";
+import { Buffer } from "buffer";
 
-const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket }) => {
+const ChatBox = ({
+  chat,
+  currentUser,
+  setSendMessage,
+  receivedMessage,
+  socket,
+}) => {
   const { user } = useSelector((state) => state.authReducer.authData);
   const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [typing, setTyping] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null); // maybe i'll do a 'preview selected files' feature one day
 
-  const handleChange = (newMessage)=> {
-    setNewMessage(newMessage.target.value)
-  }
+  const handleChange = (newMessage) => {
+    setNewMessage(newMessage.target.value);
+  };
 
   const handleKeyDown = () => {
-    const receiver = chat.members.find((id)=>id!==currentUser)
-    socket.current.emit('typing', {
+    const receiver = chat.members.find((id) => id !== currentUser);
+    socket.current.emit("typing", {
       typer: user.firstname,
-      receiverId: receiver
-    })
-  }
+      receiverId: receiver,
+    });
+  };
 
   // fetching data for header
   useEffect(() => {
@@ -48,7 +56,11 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket })
       try {
         const { data } = await getMessages(chat._id);
         setMessages(data);
-        socket.current.emit("message-seen-status", { chatId: chat._id, userId: user._id, status: "" });
+        socket.current.emit("message-seen-status", {
+          chatId: chat._id,
+          userId: user._id,
+          status: "",
+        });
       } catch (error) {
         console.log(error);
       }
@@ -58,58 +70,147 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage, socket })
   }, [chat]);
 
   // scroll to bottom
-  useEffect(()=> {
+  useEffect(() => {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
-  },[messages]);
+  }, [messages]);
 
   // fetch messages
   useEffect(() => {
     socket.current?.on("get-typing", (data) => {
-      setTyping(data.typer + ' is typing..')
+      setTyping(data.typer + " is typing..");
 
       // Clear the typing status after 2 seconds
       setTimeout(() => {
-        setTyping('')
+        setTyping("");
       }, 2000);
     });
   }, []);
 
   // Send Message
-  const handleSend = async(e)=> {
-    e.preventDefault()
+  const handleSend = async (e) => {
+    e.preventDefault();
     const message = {
-      senderId : currentUser,
+      senderId: currentUser,
       text: newMessage,
       chatId: chat._id,
-      status: ""
-  }
-  const receiverId = chat.members.find((id)=>id!==currentUser);
-  // send message to socket server
-  setSendMessage({...message, receiverId})
-  // send message to database
-  try {
-    const { data } = await addMessage(message);
-    setMessages([...messages, data]);
-    setNewMessage("");
-  }
-  catch
-  {
-    console.log("error")
-  }
-}
+      status: "",
+    };
+    const receiverId = chat.members.find((id) => id !== currentUser);
+    // send message to socket server
+    setSendMessage({ ...message, receiverId });
+    setSelectedFile(null);
+    // send message to database
+    try {
+      const { data } = await addMessage(message);
+      setMessages([...messages, data]);
+      setNewMessage("");
+    } catch {
+      console.log("error");
+    }
+  };
 
-// Receive Message from parent component
-useEffect(()=> {
-  console.log("Message Arrived: ", receivedMessage)
-  if (receivedMessage !== null && receivedMessage.chatId === chat._id) {
+  // Receive Message from parent component
+  useEffect(() => {
+    console.log("Message Arrived: ", receivedMessage);
     setMessages([...messages, receivedMessage]);
+    if (receivedMessage !== null && receivedMessage.chatId === chat._id) {
+      socket.current.emit("message-seen-status", receivedMessage);
+    }
+  }, [receivedMessage]);
 
-    socket.current.emit("message-seen-status", receivedMessage);
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    setSelectedFile(file);
+
+    const receiverId = chat.members.find((id) => id !== currentUser);
+    socket.current.emit("upload", {
+      file,
+      receiverId,
+      chatId: chat._id,
+    });
+
+    try {
+      const { data } = await addMessage({
+        chatId: chat._id,
+        senderId: currentUser,
+        file: file,
+      });
+      setMessages([...messages, data]);
+      setNewMessage("");
+    } catch {
+      console.log("error");
+    }
+  };
+
+  function renderMessage(message) {
+    if (message) {
+      if (message?.file) {
+        const imageSrc = `data:image/jpeg;base64,${Buffer.from(
+          message.file.data
+        ).toString("base64")}`;
+        return (
+          <>
+            <div
+              className={
+                message.senderId === currentUser ? "message own" : "message"
+              }
+            >
+              <img src={imageSrc} alt="received image" />
+            </div>
+            <div
+              className={
+                message.senderId === currentUser ? "time time-own" : "time"
+              }
+            >
+              <span>{format(message.createdAt)}</span>
+            </div>
+          </>
+        );
+      } else if (message?._id) {
+        return (
+          <>
+            <div
+              className={
+                message.senderId === currentUser ? "message own" : "message"
+              }
+            >
+              <span>{message.text}</span>
+            </div>
+            <div
+              className={
+                message.senderId === currentUser ? "time time-own" : "time"
+              }
+            >
+              <span>{format(message.createdAt)}</span>
+            </div>
+          </>
+        );
+      } else if (message.type === "img") {
+
+        return (
+          <>
+            <div
+              className={
+                message.senderId === currentUser ? "message own" : "message"
+              }
+            >
+              <img src={message.props.src} alt="received image" />
+            </div>
+            <div
+              className={
+                message.senderId === currentUser ? "time time-own" : "time"
+              }
+            >
+              <span>{format(message.createdAt)}</span>
+            </div>
+          </>
+        );
+      } else {
+        console.log("Unknown message type:", message.type);
+        return <p>Unknown message type</p>;
+      }
+    }
   }
-
-},[receivedMessage])
-
-
 
   const scroll = useRef();
   const imageRef = useRef();
@@ -131,35 +232,10 @@ useEffect(()=> {
                 className="followerImage"
                 style={{ width: "50px", height: "50px" }}
               />
-              <span className="name">
-                {userData?.firstname}
-              </span>
+              <span className="name">{userData?.firstname}</span>
             </div>
             {/* chat-body */}
-            <div className="chat-body" >
-              {messages.map((message) => (
-                <>
-                  <div ref={scroll}
-                    className={
-                      message.senderId === currentUser
-                        ? "message own"
-                        : "message"
-                    }
-                  >
-                    <span>{message.text}</span>{" "}
-                  </div>
-                  <div ref={scroll}
-                    className={
-                      message.senderId === currentUser
-                        ? "time time-own"
-                        : "time"
-                    }
-                  >
-                    <span>{format(message.createdAt)}</span>
-                  </div>
-                </>
-              ))}
-            </div>
+            <div className="chat-body">{messages.map(renderMessage)}</div>
             {/* chat-sender */}
             <p>{typing}</p>
             <div className="chat-sender">
@@ -172,20 +248,22 @@ useEffect(()=> {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
               />
-              <div className="send-button button" onClick = {handleSend}>Send</div>
+              <div className="send-button button" onClick={handleSend}>
+                Send
+              </div>
               <input
                 type="file"
                 name=""
                 id=""
                 style={{ display: "none" }}
                 ref={imageRef}
+                onChange={handleFileSelect}
+                accept="image/*"
               />
             </div>{" "}
           </>
         ) : (
-          <span className="chatbox-empty-message">
-            Start a conversation
-          </span>
+          <span className="chatbox-empty-message">Start a conversation</span>
         )}
       </div>
     </>

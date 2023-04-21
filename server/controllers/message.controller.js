@@ -2,10 +2,13 @@ import MessageModel from "../models/message.model.js";
 
 export const addMessage = async (req, res) => {
   const { chatId, senderId, text } = req.body;
+  var file = req.file ;
+
   const message = new MessageModel({
     chatId,
     senderId,
     text,
+    file: file.buffer
   });
   try {
     const result = await message.save();

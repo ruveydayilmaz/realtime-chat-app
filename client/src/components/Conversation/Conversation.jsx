@@ -48,7 +48,6 @@ const Conversation = ({ data, currentUser, online }) => {
           </div>
         </div>
       </div>
-      <hr style={{ width: "85%", border: "0.1px solid #ececec" }} />
     </>
   );
 };

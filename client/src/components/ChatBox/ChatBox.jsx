@@ -4,10 +4,15 @@ import { addMessage, getMessages } from "../../api/message.requests";
 import { getUser } from "../../api/user.requests";
 import "./ChatBox.css";
 import { format } from "timeago.js";
-import userImg from "../../img/user.png";
-import attach from "../../img/attach.png";
 import { useSelector } from "react-redux";
 import { Buffer } from "buffer";
+
+import EmojiImg from "../../img/emoji.png";
+import userImg from "../../img/user.png";
+import attach from "../../img/attach.png";
+import phoneImg from "../../img/phone.png";
+import searchImg from "../../img/search.png";
+import menuImg from "../../img/menu.png";
 
 const ChatBox = ({
   chat,
@@ -22,6 +27,9 @@ const ChatBox = ({
   const [newMessage, setNewMessage] = useState("");
   const [typing, setTyping] = useState("");
   const [selectedFile, setSelectedFile] = useState(null); // maybe i'll do a 'preview selected files' feature one day
+
+  const scroll = useRef();
+  const imageRef = useRef();
 
   const handleChange = (newMessage) => {
     setNewMessage(newMessage.target.value);
@@ -72,7 +80,7 @@ const ChatBox = ({
   // scroll to bottom
   useEffect(() => {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [scroll, messages]);
 
   // fetch messages
   useEffect(() => {
@@ -212,55 +220,68 @@ const ChatBox = ({
     }
   }
 
-  const scroll = useRef();
-  const imageRef = useRef();
+
   return (
     <>
-      <div className="ChatBox-container">
-        {chat ? (
+      {
+        chat && (
           <>
             {/* chat-header */}
             <div className="chat-header">
-              <img
-                src={
-                  userData?.profilePicture
-                    ? process.env.REACT_APP_PUBLIC_FOLDER +
-                      userData.profilePicture
-                    : userImg
-                }
-                alt="Profile"
-                className="followerImage"
-                style={{ width: "50px", height: "50px" }}
-              />
-              <span className="name">{userData?.firstname}</span>
+              <div className="profile">
+                <img
+                  src={
+                    userData?.profilePicture
+                      ? process.env.REACT_APP_PUBLIC_FOLDER +
+                        userData.profilePicture
+                      : userImg
+                  }
+                  alt="Profile"
+                />
+                <span className="name">{userData?.firstname}</span>                
+              </div>
+              <div className="menu">
+                  <img src={searchImg} alt="search" />
+                  <img src={phoneImg} alt="phone" />
+                  <img src={menuImg} alt="menu" />
+              </div>
             </div>
+          </>
+        )
+      }
+      <div className="ChatBox-container">
+        {chat ? (
+          <>
             {/* chat-body */}
-            <div className="chat-body">{messages.map(renderMessage)}</div>
+            <div className="chat-body" ref={scroll}>{messages.map(renderMessage)}</div>
             {/* chat-sender */}
             <p>{typing}</p>
-            <div className="chat-sender">
-              <div onClick={() => imageRef.current.click()}>
-                <img src={attach} alt="attach" />
+            <div className="input-body">
+              <div className="chat-sender">
+                <img className="emoji" src={EmojiImg} alt="emoji" />
+                <input
+                  id="inputMessage"
+                  value={newMessage}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Message"
+                />
+                <input
+                  type="file"
+                  name=""
+                  id=""
+                  style={{ display: "none" }}
+                  ref={imageRef}
+                  onChange={handleFileSelect}
+                  accept="image/*"
+                />
+                <div onClick={() => imageRef.current.click()}>
+                  <img src={attach} alt="attach" />
+                </div>
               </div>
-              <input
-                id="inputMessage"
-                value={newMessage}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-              />
-              <div className="send-button button" onClick={handleSend}>
-                Send
-              </div>
-              <input
-                type="file"
-                name=""
-                id=""
-                style={{ display: "none" }}
-                ref={imageRef}
-                onChange={handleFileSelect}
-                accept="image/*"
-              />
-            </div>{" "}
+              <div className="send-button button" onClick={handleSend}></div>
+            </div>
+
           </>
         ) : (
           <span className="chatbox-empty-message">Start a conversation</span>

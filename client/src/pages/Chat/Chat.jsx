@@ -29,7 +29,6 @@ const Chat = () => {
       }
     };
     getChats();
-
   }, [user?._id]);
 
   // Connect to Socket.io
@@ -41,49 +40,42 @@ const Chat = () => {
     });
   }, [user]);
 
+  // Connect to Socket.io and handle online/offline status
   useEffect(() => {
+    socket.current = io("ws://localhost:5000");
+    socket.current.emit("new-user-add", user?._id);
+    socket.current.on("get-users", (users) => {
+      setOnlineUsers(users);
+    });
 
-    const handleFocus = async () => {
-      socket.current.emit("new-user-add", user?._id);
-      socket.current.on("get-users", (users) => {
-        setOnlineUsers(users);
-      });
+    const handleFocus = () => {
+      socket.current.emit("new-user-add", user?.id);
     };
 
     const handleBlur = () => {
-      if(user) {
-        socket.current.emit("offline")   
+      if (user) {
+        socket.current.emit("offline");
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
-    };   
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
   }, [user]);
 
-  // Send Message to socket server
+  // Send message to Socket.io server
   useEffect(() => {
-    if (sendMessage!==null) {
-      socket.current.emit("send-message", sendMessage);}
+    if (sendMessage) {
+      socket.current.emit("send-message", sendMessage);
+    }
   }, [sendMessage]);
 
-
-  // Get the message from socket server
+  // Receive message from Socket.io server
   useEffect(() => {
-    socket.current.on("recieve-message", (data) => {
-      console.log(data)
-      setReceivedMessage(data);
-    }
-
-    );
-  }, []);
-
-  useEffect(() => {
-
     socket.current.on("receive-upload", (data) => {
       console.log(data);
       const blob = new Blob([data.file]);
@@ -91,6 +83,10 @@ const Chat = () => {
       setReceivedMessage(<img src={url} />);
     });
 
+    socket.current.on("recieve-message", (data) => {
+      console.log(data);
+      setReceivedMessage(data);
+    });
   }, []);
 
   const checkOnlineStatus = (chat) => {
@@ -99,37 +95,12 @@ const Chat = () => {
     return online ? true : false;
   };
 
-  const sendFile = (e) => {
-    const receiverId = currentChat?.members?.find((id) => id !== user?._id);
-
-    console.log(e.target.files[0])
-
-    const file = e.target.files[0];
-
-    if(file.size > 1000000) {
-      file.arrayBuffer().then((buffer) => {
-        const chunkSize = 1000000;
-        const chunks = [];
-        let offset = 0;
-        while (offset < buffer.byteLength) {
-          chunks.push(buffer.slice(offset, offset + chunkSize));
-          offset += chunkSize;
-        }
-        console.log(chunks)
-        socket.current.emit("upload", {file: chunks, receiverId: receiverId});
-      });
-    } else {
-      socket.current.emit("upload", {file: file, receiverId: receiverId});
-    }
-  };
-
   return (
     <div className="Chat">
       {/* Left Side */}
-      <Navbar socket={socket} />
       <div className="Left-side-chat">
+        <Navbar socket={socket} />
         <div className="Chat-container">
-          <h2 className="list-title">Chats</h2>
           <div className="Chat-list">
             {chats.map((chat) => (
               <div
@@ -149,7 +120,6 @@ const Chat = () => {
       </div>
 
       {/* Right Side */}
-
       <div className="Right-side-chat">
         <ChatBox
           socket={socket}

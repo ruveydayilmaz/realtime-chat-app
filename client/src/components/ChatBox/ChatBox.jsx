@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useRef } from "react";
+import { useSelector } from "react-redux";
+import { Buffer } from "buffer";
+
 import { addMessage, getMessages } from "../../api/message.requests";
 import { getUser } from "../../api/user.requests";
 import "./ChatBox.css";
-import { format } from "timeago.js";
-import { useSelector } from "react-redux";
-import { Buffer } from "buffer";
 
 import EmojiImg from "../../img/emoji.png";
 import userImg from "../../img/user.png";
@@ -150,7 +150,25 @@ const ChatBox = ({
     }
   };
 
-  function renderMessage(message) {
+  const formatDate = (createdAt) => {
+    const date = new Date(createdAt);
+    const today = new Date();
+    const diffTime = Math.abs(today - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));  
+      
+    if (diffDays === 0) {
+      return "Today";
+    } else if (diffDays === 1) {
+      return "Yesterday";
+    } else if (diffDays < 7) {
+      return date.toLocaleDateString('EN', { weekday: 'long' });
+    } else {
+      return date.toLocaleDateString();
+    }
+  };  
+
+  const renderMessage = (message) => {
+    
     if (message) {
       if (message?.file) {
         const imageSrc = `data:image/jpeg;base64,${Buffer.from(
@@ -170,7 +188,7 @@ const ChatBox = ({
                 message.senderId === currentUser ? "time time-own" : "time"
               }
             >
-              <span>{format(message.createdAt)}</span>
+              <span>{formatDate(message.createdAt)}</span>
             </div>
           </>
         );
@@ -189,7 +207,7 @@ const ChatBox = ({
                 message.senderId === currentUser ? "time time-own" : "time"
               }
             >
-              <span>{format(message.createdAt)}</span>
+              <span>{formatDate(message.createdAt)}</span>
             </div>
           </>
         );
@@ -209,7 +227,7 @@ const ChatBox = ({
                 message.senderId === currentUser ? "time time-own" : "time"
               }
             >
-              <span>{format(message.createdAt)}</span>
+              <span>{formatDate(message.createdAt)}</span>
             </div>
           </>
         );

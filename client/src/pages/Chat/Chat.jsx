@@ -8,8 +8,12 @@ import { userChats } from "../../api/chat.requests";
 import { useSelector } from "react-redux";
 import { io } from "socket.io-client";
 
+import pencilImg from "../../img/pencil.png";
+
 const Chat = () => {
   const socket = useRef();
+  const navRef = useRef(null);
+
   const { user } = useSelector((state) => state.authReducer.authData);
 
   const [chats, setChats] = useState([]);
@@ -17,6 +21,54 @@ const Chat = () => {
   const [currentChat, setCurrentChat] = useState(null);
   const [sendMessage, setSendMessage] = useState(null);
   const [receivedMessage, setReceivedMessage] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [navWidth, setNavWidth] = useState(380);
+  const [isResizing, setIsResizing] = useState(false);
+  const [active, setActive] = useState(false);
+  const [prevMouseX, setPrevMouseX] = useState(null);
+
+  const handleMouseDown = (event) => {
+    const rightEdge = navRef.current.getBoundingClientRect().right;
+    if (event.clientX > rightEdge - 10) {
+      setIsResizing(true);
+      setPrevMouseX(event.clientX);
+    }
+  }  
+  
+  const handleMouseMove = (event) => {
+    // console.log(isResizing)
+    if (isResizing) {
+      const delta = event.clientX - prevMouseX;
+      setPrevMouseX(event.clientX);
+      window.requestAnimationFrame(() => {
+        setNavWidth(prevWidth => {
+          const newWidth = prevWidth + delta;
+          if (newWidth >= 200 && newWidth < 400) {
+            return newWidth;
+          } else if (newWidth < 200) {
+            return 200;
+          } else {
+            return 380;
+          }
+        });
+      });
+    }
+  }  
+
+  const handleMouseUp = () => {
+    setIsResizing(false);
+  }
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  const cursor = isResizing ? 'col-resize' : 'default';
 
   // Get the chat in chat section
   useEffect(() => {
@@ -99,10 +151,18 @@ const Chat = () => {
     <div className="Chat">
       {/* Left Side */}
       <div className="Left-side-chat">
-        <Navbar socket={socket} />
-        <div className="Chat-container">
+        <div className={`Chat-container${isResizing ? ' is-resizing' : ''}`}
+          ref={navRef}
+          style={{ width: navWidth, cursor: cursor }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseOver={() => setActive(true)}
+          onMouseLeave={() => setActive(false)}
+        >
+          <Navbar socket={socket} />
           <div className="Chat-list">
-            {chats.map((chat) => (
+            {chats.map((chat, index) => (
               <div
                 onClick={() => {
                   setCurrentChat(chat);
@@ -112,9 +172,15 @@ const Chat = () => {
                   data={chat}
                   currentUser={user?._id}
                   online={checkOnlineStatus(chat)}
+                  index={index}
+                  setActiveIndex={setActiveIndex}
+                  activeIndex={activeIndex}
                 />
               </div>
             ))}
+          </div>
+          <div className={`new-chat ${active? 'chat-active': 'chat-disabled'}`}>
+            <img src={pencilImg} alt="new chat" />
           </div>
         </div>
       </div>

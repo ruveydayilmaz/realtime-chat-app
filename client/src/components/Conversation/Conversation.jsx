@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
+
 import { getUser } from "../../api/user.requests";
-import user from "../../img/user.png";
 import "./Conversation.css";
+
+import userImg from "../../img/user.png";
+import sentImg from "../../img/sent.png";
+import deliveredImg from "../../img/delivered.png";
+import seenImg from "../../img/seen.png";
 
 const Conversation = ({
   data,
@@ -15,6 +20,7 @@ const Conversation = ({
 }) => {
   const dispatch = useDispatch();
   const [userData, setUserData] = useState(null);
+  const [messageTime, setMessageTime] = useState();
 
   useEffect(() => {
     const userId = data.members.find((id) => id !== currentUser);
@@ -29,10 +35,37 @@ const Conversation = ({
     };
 
     getUserData();
+
+    const date = new Date(data?.lastMessage?.createdAt);
+    const today = new Date();
+    if (data?.lastMessage) {
+      if (today - date < 1) {
+        setMessageTime(`${date.getHours()}:${date.getMinutes()}`);
+      } else {
+        setMessageTime(
+          `${date.toLocaleString("EN", {
+            month: "long",
+          })} ${date.getDate()}, ${date.getFullYear()}`
+        );
+      }
+    }
   }, []);
 
   const handleClick = (index) => {
     setActiveIndex(index === activeIndex ? -1 : index);
+  };
+
+  const handleStatus = (status) => {
+    switch (status) {
+      case "seen":
+        return <img src={seenImg} alt="seen" />;
+      case "sent":
+        return <img src={sentImg} alt="sent" />;
+      case "delivered":
+        return <img src={deliveredImg} alt="delivered" />;
+      default:
+        break;
+    }
   };
 
   return (
@@ -47,16 +80,23 @@ const Conversation = ({
             src={
               userData?.profilePicture
                 ? process.env.REACT_APP_PUBLIC_FOLDER + userData.profilePicture
-                : user
+                : userImg
             }
             alt="Profile"
             className="followerImage"
           />
           <div className="user-div">
-            <span className="username">{userData?.firstname}</span>
-            <span className="status" style={{ color: online ? "#51e200" : "" }}>
-              {online ? "Online" : "Offline"}
-            </span>
+            <div className="message-div">
+              <span className="username">{userData?.firstname}</span>
+              <div className="status-div">
+                  <span className="status">
+                    {currentUser === data?.lastMessage?.senderId &&
+                      handleStatus(data?.lastMessage?.status)}
+                  </span>
+                  <span className="last-message-time">{messageTime}</span>                
+              </div>            
+            </div>
+            <span className="last-message">{data?.lastMessage?.text}</span>
           </div>
         </div>
       </div>

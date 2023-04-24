@@ -39,11 +39,31 @@
     font-size: 1rem;
     margin-bottom: 5px;
   }
+
+  .message-div {
+    display: flex;
+    justify-content: space-between;
+  }
   
-  .status {
-    font-size: 0.8rem;
-    color: #666;
+  .last-message {
+    font-size: 0.9rem;
+    color: #BBBBBB;
     margin-bottom: 5px;
+  }
+
+  .status-div {
+    display: flex;
+    align-items: center;
+  }
+
+  .last-message-time {
+    font-size: 12px;
+    color: #BBBBBB;
+    margin-left: 3px;
+  }
+
+  .status img {
+    width: 15px;
   }
   
   .online-dot {

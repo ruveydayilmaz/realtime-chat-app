@@ -20,6 +20,7 @@ const ChatBox = ({
   setSendMessage,
   receivedMessage,
   socket,
+  navWidth
 }) => {
   const { user } = useSelector((state) => state.authReducer.authData);
   const [userData, setUserData] = useState(null);
@@ -64,11 +65,16 @@ const ChatBox = ({
       try {
         const { data } = await getMessages(chat._id);
         setMessages(data);
-        socket.current.emit("message-seen-status", {
-          chatId: chat._id,
-          userId: user._id,
-          status: "",
-        });
+
+        var lastMessage = messages[messages.length - 1];
+        if(lastMessage.senderId != currentUser) {
+          socket.current.emit("message-seen-status", {
+            chatId: chat._id,
+            userId: user._id,
+            status: "",
+          });          
+        }
+
       } catch (error) {
         console.log(error);
       }
@@ -243,28 +249,25 @@ const ChatBox = ({
     <>
       {
         chat && (
-          <>
-            {/* chat-header */}
-            <div className="chat-header">
-              <div className="profile">
-                <img
-                  src={
-                    userData?.profilePicture
-                      ? process.env.REACT_APP_PUBLIC_FOLDER +
-                        userData.profilePicture
-                      : userImg
-                  }
-                  alt="Profile"
-                />
-                <span className="name">{userData?.firstname}</span>                
-              </div>
-              <div className="menu">
-                  <img src={searchImg} alt="search" />
-                  <img src={phoneImg} alt="phone" />
-                  <img src={menuImg} alt="menu" />
-              </div>
+          <div className="chat-header" style={{ width: `calc(100% - ${navWidth}px)` }}> {/* chat-header */}
+            <div className="profile">
+              <img
+                src={
+                  userData?.profilePicture
+                    ? process.env.REACT_APP_PUBLIC_FOLDER +
+                      userData.profilePicture
+                    : userImg
+                }
+                alt="Profile"
+              />
+              <span className="name">{userData?.firstname}</span>                
             </div>
-          </>
+            <div className="menu">
+                <img src={searchImg} alt="search" />
+                <img src={phoneImg} alt="phone" />
+                <img src={menuImg} alt="menu" />
+            </div>
+          </div>
         )
       }
       <div className="ChatBox-container">

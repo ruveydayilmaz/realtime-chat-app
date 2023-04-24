@@ -193,6 +193,7 @@ const Chat = () => {
           currentUser={user?._id}
           setSendMessage={setSendMessage}
           receivedMessage={receivedMessage}
+          navWidth={navWidth}
         />
       </div>
     </div>

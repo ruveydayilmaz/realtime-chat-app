@@ -21,7 +21,7 @@ const Navbar = ({socket}) => {
   return (
     <div className="nav">
       <img 
-        className="menu"
+        className="nav-menu "
         onClick={() => setMenuOpen(!menuOpen)}         
         src={hamburgerImg} 
         alt="menu" 

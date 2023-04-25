@@ -59,7 +59,18 @@
     flex-direction: column;
     overflow: auto;
     gap: 0.5rem;
-    margin-top: 60px
+    margin-top: 60px;
+  }
+
+  .message-date {
+    font-weight: 600;
+    font-size: 15px;
+    color: white;
+    background-color: #0c0c0c;
+    padding: 3px 5px;
+    border-radius: 5px;
+    width: min-content;
+    align-self: center;
   }
   
   .message {

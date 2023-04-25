@@ -67,7 +67,7 @@ const ChatBox = ({
         setMessages(data);
 
         var lastMessage = messages[messages.length - 1];
-        if(lastMessage.senderId != currentUser) {
+        if(lastMessage?.senderId != currentUser) {
           socket.current.emit("message-seen-status", {
             chatId: chat._id,
             userId: user._id,
@@ -173,14 +173,27 @@ const ChatBox = ({
     }
   };  
 
-  const renderMessage = (message) => {
-    
+  const isSameDay = (date1, date2) => {
+    const firstDate = new Date(date1);
+    const secondDate = new Date(date2);
+
+    return firstDate.getFullYear() === secondDate.getFullYear() &&
+      firstDate.getMonth() === secondDate.getMonth() &&
+      firstDate.getDate() === secondDate.getDate();
+  };
+  
+  const renderMessage = (message, index, messages) => {
     if (message) {
+      const previousMessage = messages[index - 1];
+
+      const showDate = !previousMessage || !isSameDay(message.createdAt, previousMessage?.createdAt);
+      let messageElement;
+  
       if (message?.file) {
         const imageSrc = `data:image/jpeg;base64,${Buffer.from(
           message.file.data
         ).toString("base64")}`;
-        return (
+        messageElement = (
           <>
             <div
               className={
@@ -194,12 +207,11 @@ const ChatBox = ({
                 message.senderId === currentUser ? "time time-own" : "time"
               }
             >
-              <span>{formatDate(message.createdAt)}</span>
             </div>
           </>
         );
-      } else if (message?._id) {
-        return (
+      } else if (message?.chatId) {
+        messageElement = (
           <>
             <div
               className={
@@ -213,13 +225,11 @@ const ChatBox = ({
                 message.senderId === currentUser ? "time time-own" : "time"
               }
             >
-              <span>{formatDate(message.createdAt)}</span>
             </div>
           </>
         );
       } else if (message.type === "img") {
-
-        return (
+        messageElement = (
           <>
             <div
               className={
@@ -233,16 +243,26 @@ const ChatBox = ({
                 message.senderId === currentUser ? "time time-own" : "time"
               }
             >
-              <span>{formatDate(message.createdAt)}</span>
             </div>
           </>
         );
       } else {
         console.log("Unknown message type:", message.type);
-        return <p>Unknown message type</p>;
+        messageElement = <p>Unknown message type</p>;
+      }
+  
+      if (showDate) {
+        return (
+          <>
+            <div className="message-date">{formatDate(message.createdAt)}</div>
+            {messageElement}
+          </>
+        );
+      } else {
+        return messageElement;
       }
     }
-  }
+  };
 
 
   return (
@@ -276,7 +296,7 @@ const ChatBox = ({
             {/* chat-body */}
             <div className="chat-body" ref={scroll}>{messages.map(renderMessage)}</div>
             {/* chat-sender */}
-            <p>{typing}</p>
+            <p style={{color: 'white'}}>{typing}</p>
             <div className="input-body">
               <div className="chat-sender">
                 <img className="emoji" src={EmojiImg} alt="emoji" />

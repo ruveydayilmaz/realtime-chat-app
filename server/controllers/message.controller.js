@@ -1,14 +1,15 @@
 import MessageModel from "../models/message.model.js";
+import ChatModel from "../models/chat.model.js";
 
 export const addMessage = async (req, res) => {
   const { chatId, senderId, text } = req.body;
-  if(file) var file = req.file.buffer;
+  if (req.file) var file = req.file.buffer;
 
   const message = new MessageModel({
     chatId,
     senderId,
     text,
-    file: file
+    file: file,
   });
   try {
     const result = await message.save();
@@ -28,34 +29,47 @@ export const getMessages = async (req, res) => {
   }
 };
 
-export const updateMessageStatus = async (id, status) => {
+export const updateMessageStatus = async ({ chatId, userId, status }) => {
   try {
-    if(status === "seen") {
-      const lastMessage = await MessageModel.find({chatId: id}).limit(1).sort({ $natural : -1 });
+    if (status === "seen") {
+      const lastMessage = await MessageModel.find({
+        chatId: chatId,
+        senderId: { $ne: userId },
+      })
+        .limit(1)
+        .sort({ $natural: -1 });
 
-      await MessageModel.updateOne(  // bu da updateMany olabilir içine de status: "delivered" yazılabilir
-        { _id: lastMessage[0]._id },
-        {
-          $set: {
-            status: status,
-          },
+        if(lastMessage.length > 0) {
+          await MessageModel.updateOne(
+            // bu da updateMany olabilir içine de status: "delivered" yazılabilir
+            { _id: lastMessage[0]._id },
+            {
+              $set: {
+                status: status,
+              },
+            }
+          );          
         }
-      );
-    }
-    else if(status === "delivered") {
-      await MessageModel.updateMany( 
-        { 
-          userId: id,
-          status: "sent"
-        },
-        {
-          $set: {
-            status: status,
-          },
-        }
-      );
-    }
 
+      } else if (status === "delivered") {
+        const chats = await ChatModel.find({ members: userId });
+
+        const chatIDs = chats.map((chat) => {
+          return chat._id;
+        });
+
+        await MessageModel.updateMany(
+          {
+            chatId: { $in: chatIDs },
+            senderId: { $ne: userId },
+            status: "sent",
+          },
+          {
+            status: status,
+          }
+        );
+      }
+      
   } catch (error) {
     console.log(error.message);
   }

@@ -16,14 +16,17 @@ const Conversation = ({
   online,
   index,
   setActiveIndex,
-  activeIndex,
+  activeIndex
 }) => {
   const dispatch = useDispatch();
   const [userData, setUserData] = useState(null);
   const [messageTime, setMessageTime] = useState();
+  const [notSeenCount, setNotSeenCount] = useState(0);
 
   useEffect(() => {
     const userId = data.members.find((id) => id !== currentUser);
+
+    // move this to actions
     const getUserData = async () => {
       try {
         const { data } = await getUser(userId);
@@ -39,20 +42,30 @@ const Conversation = ({
     const date = new Date(data?.lastMessage?.createdAt);
     const today = new Date();
     if (data?.lastMessage) {
-      if (today - date < 1) {
+      const ONE_DAY = 2 * 12 * 60 * 60 * 1000;
+      const ONE_WEEK = 7 * ONE_DAY;
+
+      if (today - date < ONE_DAY) {              // show hour - minutes
         setMessageTime(`${date.getHours()}:${date.getMinutes()}`);
-      } else {
+      } else if (today - date < ONE_WEEK) {     // show day
         setMessageTime(
+          `${date.toLocaleDateString('EN', { weekday: 'long' })}`
+        );
+      } else {
+        setMessageTime(                        // show full date
           `${date.toLocaleString("EN", {
             month: "long",
           })} ${date.getDate()}, ${date.getFullYear()}`
         );
       }
     }
+
+    setNotSeenCount(data?.notSeenCount);
   }, []);
 
   const handleClick = (index) => {
     setActiveIndex(index === activeIndex ? -1 : index);
+    setNotSeenCount(0);
   };
 
   const handleStatus = (status) => {
@@ -96,7 +109,10 @@ const Conversation = ({
                   <span className="last-message-time">{messageTime}</span>                
               </div>            
             </div>
-            <span className="last-message">{data?.lastMessage?.text}</span>
+            <div className="message-alt-div">
+              <span className="last-message">{data?.lastMessage?.text}</span>
+              {notSeenCount != 0 && <span className="not-seen-count">{notSeenCount}</span>}              
+            </div>
           </div>
         </div>
       </div>

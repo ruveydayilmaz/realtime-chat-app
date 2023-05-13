@@ -86,7 +86,7 @@ const ChatBox = ({
   // scroll to bottom
   useEffect(() => {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
-  }, [scroll, messages]);
+  }, [messages]);
 
   // fetch messages
   useEffect(() => {
@@ -111,7 +111,7 @@ const ChatBox = ({
     };
     const receiverId = chat.members.find((id) => id !== currentUser);
     // send message to socket server
-    setSendMessage({ ...message, receiverId });
+    setSendMessage({ ...message, receiverId, createdAt: new Date()});
     setSelectedFile(null);
     // send message to database
     try {
@@ -126,8 +126,9 @@ const ChatBox = ({
   // Receive Message from parent component
   useEffect(() => {
     console.log("Message Arrived: ", receivedMessage);
-    setMessages([...messages, receivedMessage]);
     if (receivedMessage !== null && receivedMessage.chatId === chat._id) {
+      setMessages([...messages, receivedMessage]);
+      
       socket.current.emit("message-seen-status", receivedMessage);
     }
   }, [receivedMessage]);
@@ -141,6 +142,7 @@ const ChatBox = ({
       file,
       receiverId,
       chatId: chat._id,
+      createdAt: new Date()
     });
 
     try {
@@ -149,7 +151,7 @@ const ChatBox = ({
         senderId: currentUser,
         file: file,
       });
-      setMessages([...messages, data]);
+      setMessages([...messages, {...data, createdAt: new Date()}]);
       setNewMessage("");
     } catch {
       console.log("error");
@@ -191,7 +193,7 @@ const ChatBox = ({
   
       if (message?.file) {
         const imageSrc = `data:image/jpeg;base64,${Buffer.from(
-          message.file.data
+          message.file
         ).toString("base64")}`;
         messageElement = (
           <>
@@ -210,7 +212,7 @@ const ChatBox = ({
             </div>
           </>
         );
-      } else if (message?.chatId) {
+      } else if (message?.chatId && !message?.file) {
         messageElement = (
           <>
             <div
@@ -229,6 +231,7 @@ const ChatBox = ({
           </>
         );
       } else if (message.type === "img") {
+        console.log('IMAGE', message)
         messageElement = (
           <>
             <div

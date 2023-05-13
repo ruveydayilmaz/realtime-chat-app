@@ -83,15 +83,6 @@ const Chat = () => {
     getChats();
   }, [user?._id]);
 
-  // Connect to Socket.io
-  useEffect(() => {
-    socket.current = io("ws://localhost:5000");
-    socket.current.emit("new-user-add", user?._id);
-    socket.current.on("get-users", (users) => {
-      setOnlineUsers(users);
-    });
-  }, [user]);
-
   // Connect to Socket.io and handle online/offline status
   useEffect(() => {
     socket.current = io("ws://localhost:5000");
@@ -126,17 +117,18 @@ const Chat = () => {
     }
   }, [sendMessage]);
 
-  // Receive message from Socket.io server
+
+  // Get the message from socket server
+  useEffect(() => {
+    socket.current.on("recieve-message", (data) => {
+      console.log(data)
+      setReceivedMessage(data);
+    });
+  }, []);
+
   useEffect(() => {
     socket.current.on("receive-upload", (data) => {
-      console.log(data);
-      const blob = new Blob([data.file]);
-      const url = URL.createObjectURL(blob);
-      setReceivedMessage(<img src={url} />);
-    });
-
-    socket.current.on("recieve-message", (data) => {
-      console.log(data);
+      console.log('RE UPLOAD', data)
       setReceivedMessage(data);
     });
   }, []);

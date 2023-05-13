@@ -19,14 +19,26 @@ export const userChats = async (req, res) => {
       members: { $in: [req.params.userId] },
     });
 
-    var chatsWithLastMessage = await Promise.all(chats.map(async (chat) => {
-      chat = chat.toJSON()
-      const lastMessage = await MessageModel.findOne({chatId: chat._id}).sort({createdAt: -1});
-      return {
-        ...chat,
-        lastMessage
-      };
-    }));
+    var chatsWithLastMessage = await Promise.all(
+      chats.map(async (chat) => {
+        chat = chat.toJSON();
+
+        const notSeenCount = await MessageModel.count({
+          chatId: chat._id,
+          senderId: { $ne: req.params.userId },
+          status: { $ne: "seen" },
+        });
+        
+        const lastMessage = await MessageModel.findOne({
+          chatId: chat._id,
+        }).sort({ createdAt: -1 });
+        return {
+          ...chat,
+          lastMessage,
+          notSeenCount,
+        };
+      })
+    );
 
     res.status(200).json(chatsWithLastMessage);
   } catch (error) {
@@ -39,8 +51,8 @@ export const findChat = async (req, res) => {
     const chat = await ChatModel.findOne({
       members: { $all: [req.params.firstId, req.params.secondId] },
     });
-    res.status(200).json(chat)
+    res.status(200).json(chat);
   } catch (error) {
-    res.status(500).json(error)
+    res.status(500).json(error);
   }
 };

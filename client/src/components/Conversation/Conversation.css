@@ -44,11 +44,27 @@
     display: flex;
     justify-content: space-between;
   }
+
+  .message-alt-div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   
   .last-message {
     font-size: 0.9rem;
     color: #BBBBBB;
-    margin-bottom: 5px;
+  }
+
+  .not-seen-count {
+    font-size: 0.8rem;
+    background-color: #766ac8;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .status-div {

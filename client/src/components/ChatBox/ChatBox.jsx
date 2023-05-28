@@ -85,7 +85,10 @@ const ChatBox = ({
 
   // scroll to bottom
   useEffect(() => {
-    scroll.current?.scrollIntoView({ behavior: "smooth" });
+    // fetching the chat div using the get element by id and then scrolling to the bottom
+    var chatDiv = document.getElementById("chat-body");
+    chatDiv?.scrollTo({ top: chatDiv.scrollHeight, behavior: "smooth" });
+    // scroll.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // fetch messages
@@ -297,7 +300,7 @@ const ChatBox = ({
         {chat ? (
           <>
             {/* chat-body */}
-            <div className="chat-body" ref={scroll}>{messages.map(renderMessage)}</div>
+            <div className="chat-body" id="chat-body" ref={scroll}>{messages.map(renderMessage)}</div>
             {/* chat-sender */}
             <p style={{color: 'white'}}>{typing}</p>
             <div className="input-body">

@@ -1,11 +1,3 @@
-# FROM node:14-slim
-# WORKDIR /app
-# COPY package.json .
-# COPY . .
-# RUN npm install
-# EXPOSE 6001
-# CMD ["node", "index.js"]
-
 # ==== CONFIGURE =====
 # Use a Node 16 base image
 FROM node:16-alpine 

@@ -3,8 +3,9 @@ import { useRef } from "react";
 import { useSelector } from "react-redux";
 import { Buffer } from "buffer";
 
-import { addMessage, getMessages } from "../../api/message.requests";
+import { addMessage } from "../../api/message.requests";
 import { getUser } from "../../api/user.requests";
+import socketFunctions from "../../utils/socket";
 import "./ChatBox.css";
 
 import EmojiImg from "../../img/emoji.png";
@@ -19,8 +20,7 @@ const ChatBox = ({
   currentUser,
   setSendMessage,
   receivedMessage,
-  socket,
-  navWidth
+  navWidth,
 }) => {
   const { user } = useSelector((state) => state.authReducer.authData);
   const [userData, setUserData] = useState(null);
@@ -34,14 +34,6 @@ const ChatBox = ({
 
   const handleChange = (newMessage) => {
     setNewMessage(newMessage.target.value);
-  };
-
-  const handleKeyDown = () => {
-    const receiver = chat.members.find((id) => id !== currentUser);
-    socket.current.emit("typing", {
-      typer: user.firstname,
-      receiverId: receiver,
-    });
   };
 
   // fetching data for header
@@ -59,49 +51,46 @@ const ChatBox = ({
     if (chat !== null) getUserData();
   }, [chat, currentUser]);
 
-  // fetch messages
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const { data } = await getMessages(chat._id);
-        setMessages(data);
-
-        var lastMessage = messages[messages.length - 1];
-        if(lastMessage?.senderId != currentUser) {
-          socket.current.emit("message-seen-status", {
-            chatId: chat._id,
-            userId: user._id,
-            status: "",
-          });          
-        }
-
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    if (chat !== null) fetchMessages();
+    socketFunctions.fetchMessages(user, chat, setMessages, currentUser);
   }, [chat]);
+
+  useEffect(() => {
+    socketFunctions.fetchTyping(setTyping);
+  }, []);
+
+  useEffect(() => {
+    socketFunctions.receiveMessageFromParent(
+      receivedMessage,
+      chat,
+      setMessages,
+      currentUser,
+      messages
+    );
+  }, [receivedMessage]);
+
+  const handleKeyDown = () => {
+    socketFunctions.sendTyping(user, chat, currentUser);
+  };
+
+  const handleFileSelect = (event) => {
+    socketFunctions.handleFileSelect(
+      event,
+      chat,
+      setSelectedFile,
+      setMessages,
+      currentUser,
+      setNewMessage,
+      messages
+    );
+  };
 
   // scroll to bottom
   useEffect(() => {
     // fetching the chat div using the get element by id and then scrolling to the bottom
     var chatDiv = document.getElementById("chat-body");
     chatDiv?.scrollTo({ top: chatDiv.scrollHeight, behavior: "smooth" });
-    // scroll.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // fetch messages
-  useEffect(() => {
-    socket.current?.on("get-typing", (data) => {
-      setTyping(data.typer + " is typing..");
-
-      // Clear the typing status after 2 seconds
-      setTimeout(() => {
-        setTyping("");
-      }, 2000);
-    });
-  }, []);
 
   // Send Message
   const handleSend = async (e) => {
@@ -114,7 +103,7 @@ const ChatBox = ({
     };
     const receiverId = chat.members.find((id) => id !== currentUser);
     // send message to socket server
-    setSendMessage({ ...message, receiverId, createdAt: new Date()});
+    setSendMessage({ ...message, receiverId, createdAt: new Date() });
     setSelectedFile(null);
     // send message to database
     try {
@@ -126,80 +115,49 @@ const ChatBox = ({
     }
   };
 
-  // Receive Message from parent component
-  useEffect(() => {
-    console.log("Message Arrived: ", receivedMessage);
-    if (receivedMessage !== null && receivedMessage.chatId === chat._id) {
-      setMessages([...messages, receivedMessage]);
-      
-      socket.current.emit("message-seen-status", receivedMessage);
-    }
-  }, [receivedMessage]);
-
-  const handleFileSelect = async (event) => {
-    const file = event.target.files[0];
-    setSelectedFile(file);
-
-    const receiverId = chat.members.find((id) => id !== currentUser);
-    socket.current.emit("upload", {
-      file,
-      receiverId,
-      chatId: chat._id,
-      createdAt: new Date()
-    });
-
-    try {
-      const { data } = await addMessage({
-        chatId: chat._id,
-        senderId: currentUser,
-        file: file,
-      });
-      setMessages([...messages, {...data, createdAt: new Date()}]);
-      setNewMessage("");
-    } catch {
-      console.log("error");
-    }
-  };
-
   const formatDate = (createdAt) => {
     const date = new Date(createdAt);
     const today = new Date();
     const diffTime = Math.abs(today - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));  
-      
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
     if (diffDays === 0) {
       return "Today";
     } else if (diffDays === 1) {
       return "Yesterday";
     } else if (diffDays < 7) {
-      return date.toLocaleDateString('EN', { weekday: 'long' });
+      return date.toLocaleDateString("EN", { weekday: "long" });
     } else {
       return date.toLocaleDateString();
     }
-  };  
+  };
 
   const isSameDay = (date1, date2) => {
     const firstDate = new Date(date1);
     const secondDate = new Date(date2);
 
-    return firstDate.getFullYear() === secondDate.getFullYear() &&
+    return (
+      firstDate.getFullYear() === secondDate.getFullYear() &&
       firstDate.getMonth() === secondDate.getMonth() &&
-      firstDate.getDate() === secondDate.getDate();
+      firstDate.getDate() === secondDate.getDate()
+    );
   };
-  
+
   const renderMessage = (message, index, messages) => {
     if (message) {
       const previousMessage = messages[index - 1];
 
-      const showDate = !previousMessage || !isSameDay(message.createdAt, previousMessage?.createdAt);
+      const showDate =
+        !previousMessage ||
+        !isSameDay(message.createdAt, previousMessage?.createdAt);
       let messageElement;
-  
+
       if (message?.file) {
         const imageSrc = `data:image/jpeg;base64,${Buffer.from(
           message.file
         ).toString("base64")}`;
         messageElement = (
-          <>
+          <React.Fragment key={index}>
             <div
               className={
                 message.senderId === currentUser ? "message own" : "message"
@@ -211,13 +169,12 @@ const ChatBox = ({
               className={
                 message.senderId === currentUser ? "time time-own" : "time"
               }
-            >
-            </div>
-          </>
+            ></div>
+          </React.Fragment>
         );
       } else if (message?.chatId && !message?.file) {
         messageElement = (
-          <>
+          <React.Fragment key={index}>
             <div
               className={
                 message.senderId === currentUser ? "message own" : "message"
@@ -229,14 +186,13 @@ const ChatBox = ({
               className={
                 message.senderId === currentUser ? "time time-own" : "time"
               }
-            >
-            </div>
-          </>
+            ></div>
+          </React.Fragment>
         );
       } else if (message.type === "img") {
-        console.log('IMAGE', message)
+        console.log("IMAGE", message);
         messageElement = (
-          <>
+          <React.Fragment key={index}>
             <div
               className={
                 message.senderId === currentUser ? "message own" : "message"
@@ -248,21 +204,20 @@ const ChatBox = ({
               className={
                 message.senderId === currentUser ? "time time-own" : "time"
               }
-            >
-            </div>
-          </>
+            ></div>
+          </React.Fragment>
         );
       } else {
         console.log("Unknown message type:", message.type);
         messageElement = <p>Unknown message type</p>;
       }
-  
+
       if (showDate) {
         return (
-          <>
+          <React.Fragment key={index}>
             <div className="message-date">{formatDate(message.createdAt)}</div>
             {messageElement}
-          </>
+          </React.Fragment>
         );
       } else {
         return messageElement;
@@ -270,39 +225,43 @@ const ChatBox = ({
     }
   };
 
-
   return (
     <>
-      {
-        chat && (
-          <div className="chat-header" style={{ width: `calc(100% - ${navWidth}px)` }}> {/* chat-header */}
-            <div className="profile">
-              <img
-                src={
-                  userData?.profilePicture
-                    ? process.env.REACT_APP_PUBLIC_FOLDER +
-                      userData.profilePicture
-                    : userImg
-                }
-                alt="Profile"
-              />
-              <span className="name">{userData?.firstname}</span>                
-            </div>
-            <div className="menu">
-                <img src={searchImg} alt="search" />
-                <img src={phoneImg} alt="phone" />
-                <img src={menuImg} alt="menu" />
-            </div>
+      {chat && (
+        <div
+          className="chat-header"
+          style={{ width: `calc(100% - ${navWidth}px)` }}
+        >
+          {" "}
+          {/* chat-header */}
+          <div className="profile">
+            <img
+              src={
+                userData?.profilePicture
+                  ? process.env.REACT_APP_PUBLIC_FOLDER +
+                    userData.profilePicture
+                  : userImg
+              }
+              alt="Profile"
+            />
+            <span className="name">{userData?.firstname}</span>
           </div>
-        )
-      }
+          <div className="menu">
+            <img src={searchImg} alt="search" />
+            <img src={phoneImg} alt="phone" /> {/* onClick={sendCall} */}
+            <img src={menuImg} alt="menu" />
+          </div>
+        </div>
+      )}
       <div className="ChatBox-container">
         {chat ? (
           <>
             {/* chat-body */}
-            <div className="chat-body" id="chat-body" ref={scroll}>{messages.map(renderMessage)}</div>
+            <div className="chat-body" id="chat-body" ref={scroll}>
+              {messages.map(renderMessage)}
+            </div>
             {/* chat-sender */}
-            <p style={{color: 'white'}}>{typing}</p>
+            <p style={{ color: "white" }}>{typing}</p>
             <div className="input-body">
               <div className="chat-sender">
                 <img className="emoji" src={EmojiImg} alt="emoji" />
@@ -328,7 +287,6 @@ const ChatBox = ({
               </div>
               <div className="send-button button" onClick={handleSend}></div>
             </div>
-
           </>
         ) : (
           <span className="chatbox-empty-message">Start a conversation</span>

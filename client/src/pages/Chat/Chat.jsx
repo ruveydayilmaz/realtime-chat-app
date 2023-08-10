@@ -1,13 +1,15 @@
 import React, { useRef, useState } from "react";
-import ChatBox from "../../components/ChatBox/ChatBox";
-import Conversation from "../../components/Conversation/Conversation";
-import Navbar from "../../components/Navbar/Navbar";
-import "./Chat.css";
 import { useEffect } from "react";
 import { userChats } from "../../api/chat.requests";
 import { useSelector } from "react-redux";
-import { io } from "socket.io-client";
 
+import ChatBox from "../../components/ChatBox/ChatBox";
+import Conversation from "../../components/Conversation/Conversation";
+import Navbar from "../../components/Navbar/Navbar";
+
+import socketFunctions from "../../utils/socket";
+
+import "./Chat.css";
 import pencilImg from "../../img/pencil.png";
 
 const Chat = () => {
@@ -27,49 +29,6 @@ const Chat = () => {
   const [active, setActive] = useState(false);
   const [prevMouseX, setPrevMouseX] = useState(null);
 
-  const handleMouseDown = (event) => {
-    const rightEdge = navRef.current.getBoundingClientRect().right;
-    if (event.clientX > rightEdge - 10) {
-      setIsResizing(true);
-      setPrevMouseX(event.clientX);
-    }
-  }  
-  
-  const handleMouseMove = (event) => {
-    // console.log(isResizing)
-    if (isResizing) {
-      const delta = event.clientX - prevMouseX;
-      setPrevMouseX(event.clientX);
-      window.requestAnimationFrame(() => {
-        setNavWidth(prevWidth => {
-          const newWidth = prevWidth + delta;
-          if (newWidth >= 200 && newWidth < 400) {
-            return newWidth;
-          } else if (newWidth < 200) {
-            return 200;
-          } else {
-            return 380;
-          }
-        });
-      });
-    }
-  }  
-
-  const handleMouseUp = () => {
-    setIsResizing(false);
-  }
-
-  useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing]);
-
-  const cursor = isResizing ? 'col-resize' : 'default';
-
   // Get the chat in chat section
   useEffect(() => {
     const getChats = async () => {
@@ -83,54 +42,67 @@ const Chat = () => {
     getChats();
   }, [user?._id]);
 
-  // Connect to Socket.io and handle online/offline status
+  const handleMouseDown = (event) => {
+    const rightEdge = navRef.current.getBoundingClientRect().right;
+    if (event.clientX > rightEdge - 10) {
+      setIsResizing(true);
+      setPrevMouseX(event.clientX);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsResizing(false);
+  };
+
+  const handleMouseMove = (event) => {
+    // console.log(isResizing)
+    if (isResizing) {
+      const delta = event.clientX - prevMouseX;
+      setPrevMouseX(event.clientX);
+      window.requestAnimationFrame(() => {
+        setNavWidth((prevWidth) => {
+          const newWidth = prevWidth + delta;
+          if (newWidth >= 200 && newWidth < 400) {
+            return newWidth;
+          } else if (newWidth < 200) {
+            return 200;
+          } else {
+            return 380;
+          }
+        });
+      });
+    }
+  };
+
   useEffect(() => {
-    socket.current = io("ws://localhost:5000");
-    socket.current.emit("new-user-add", user?._id);
-    socket.current.on("get-users", (users) => {
-      setOnlineUsers(users);
-    });
-
-    const handleFocus = () => {
-      socket.current.emit("new-user-add", user?.id);
-    };
-
-    const handleBlur = () => {
-      if (user) {
-        socket.current.emit("offline");
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    window.addEventListener("blur", handleBlur);
-
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
     return () => {
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
+  }, [isResizing]);
+
+  const cursor = isResizing ? "col-resize" : "default";
+
+  useEffect(() => {
+    socketFunctions.connectSocket(user, setOnlineUsers);
   }, [user]);
 
-  // Send message to Socket.io server
   useEffect(() => {
-    if (sendMessage) {
-      socket.current.emit("send-message", sendMessage);
-    }
+    socketFunctions.sendMessage(sendMessage);
   }, [sendMessage]);
 
-
-  // Get the message from socket server
   useEffect(() => {
-    socket.current.on("recieve-message", (data) => {
-      console.log(data)
-      setReceivedMessage(data);
-    });
-  }, []);
+    if (currentChat) {
+      socketFunctions.receiveMessage(setReceivedMessage, currentChat._id);
+    }
+  }, [currentChat]);
 
   useEffect(() => {
-    socket.current.on("receive-upload", (data) => {
-      console.log('RE UPLOAD', data)
-      setReceivedMessage(data);
-    });
+    if (currentChat) {
+      socketFunctions.receiveUpload(setReceivedMessage, currentChat._id);
+    }
   }, []);
 
   const checkOnlineStatus = (chat) => {
@@ -143,7 +115,8 @@ const Chat = () => {
     <div className="Chat">
       {/* Left Side */}
       <div className="Left-side-chat">
-        <div className={`Chat-container${isResizing ? ' is-resizing' : ''}`}
+        <div
+          className={`Chat-container${isResizing ? " is-resizing" : ""}`}
           ref={navRef}
           style={{ width: navWidth, cursor: cursor }}
           onMouseDown={handleMouseDown}
@@ -156,6 +129,7 @@ const Chat = () => {
           <div className="Chat-list">
             {chats.map((chat, index) => (
               <div
+                key={index}
                 onClick={() => {
                   setCurrentChat(chat);
                 }}
@@ -171,7 +145,9 @@ const Chat = () => {
               </div>
             ))}
           </div>
-          <div className={`new-chat ${active? 'chat-active': 'chat-disabled'}`}>
+          <div
+            className={`new-chat ${active ? "chat-active" : "chat-disabled"}`}
+          >
             <img src={pencilImg} alt="new chat" />
           </div>
         </div>

@@ -16,16 +16,16 @@ function App() {
         path="/auth"
         element={user ? <Navigate to="../" /> : <Auth />}
       />
-      <Route
+      {/* <Route
         path="*"
         element={
           <main style={{ padding: "1rem" }}>
             <p>There's nothing here!</p>
           </main>
         }
-      />
+      /> */}
     </Routes>
-  );
+  )
 }
 
-export default App;
+export default App

@@ -1,0 +1,33 @@
+{
+	"AlreadyExists": "{{model}} with the given info already exists",
+	"UserNotExist": "A user with this email does not exist",
+	"UnableToCreate": "Unable to create {{model}}",
+	"UnableToFetch": "Unable to fetch {{model}}",
+	"SuccessfullyFetched": "Successfully fetched {{model}}",
+	"SuccessfullyCreated": "Successfully created {{model}}",
+	"NotFound": "Could not find a {{model}} with the given info",
+
+	"UnableToVerify": "Unable to verify user",
+	"SuccessfullyRegistered": "Successfully registered",
+	"SuccessfullyRefreshed": "Successfully refreshed access token",
+	"SuccessfullyVerified": "Successfully verified",
+	"VerifyAccount": "Please verify your account",
+	"AlreadyVerified": "Your account is already verified",
+	"NotVerified": "Your {{provider}} is not verified",
+	"InvalidCredentials": "Invalid credentials",
+	"InvalidCode": "Invalid code",
+	"SuccessfulLogin": "Successfully logged in",
+	"SuccessfulLogout": "Successfully logged out",
+	"SuccessfulSentOtp": "Successfully sent code! Please check your email",
+	"TokenUserNotFound": "Could not find a user with this token",
+	"NotFoundToken": "Could not find a user with this refresh token",
+
+	"UnableToUpload": "Unable to upload image",
+	"UnableToUpdatePicture": "Unable to update user profile picture",
+	"SuccessfulPictureUpdate": "Successfully updated user profile picture",
+	"UnableToUpdateProfile": "Unable to update user profile",
+	"SuccessfulProfileUpdate": "Successfully updated user profile",
+	"PasswordSameAsCurrent": "New password can not be the same as the current password",
+	"UnableToUpdatePassword": "Unable to update user profile picture",
+	"SuccessfulPasswordUpdate": "Successfully updated password"
+}

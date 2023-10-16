@@ -1,6 +1,7 @@
 .Chat {
   display: flex;
   height: 100%;
+  position: relative;
 }
 
 .list-title {
@@ -135,4 +136,25 @@
   .follower.conversation > div > .name {
     display: none;
   }
+}
+
+.loader-div {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader {
+  border: 4px solid #212121;
+  border-top: 4px solid #766ac8;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

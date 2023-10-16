@@ -10,7 +10,9 @@ import searchImg from "../../img/search.png";
 
 const Navbar = ({socket}) => {
   const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.authReducer.authData);
+  const authData = useSelector((state) => state.authReducer.authData);
+  const user = authData.data[0]?.user;
+  
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogOut = ()=> {
@@ -40,12 +42,15 @@ const Navbar = ({socket}) => {
                 <p className="first-name">{user?.firstname}</p>
               </tr>
               <tr onClick={handleLogOut} >
-                <img 
-                  className="logout-button" 
-                  src={logoutImg} 
-                  alt="logout" 
-                />
-                <p>Logout</p>
+                <div>
+                  <img 
+                    className="logout-button" 
+                    src={logoutImg} 
+                    alt="logout" 
+                  />
+                  <p>Logout</p>                  
+                </div>
+
               </tr>
               <tr>
                 <span>Real time Chat App by Ruveyda</span>

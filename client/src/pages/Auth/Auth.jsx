@@ -52,46 +52,14 @@ const Auth = () => {
         <h3 className="title" >{isSignUp ? "Register" : "Login"}</h3>
 
         {isSignUp && (
-          <input
-            required
-            type="text"
-            placeholder="Name"
-            className="input-div"
-            name="firstname"
-            value={data.firstname}
-            onChange={handleChange}
-          />
+          <input required type="text" placeholder="Name" className="input-div" name="firstname" value={data.firstname} onChange={handleChange} />
         )}
 
-        <input
-          required
-          type="text"
-          placeholder="Username"
-          className="input-div"
-          name="username"
-          value={data.username}
-          onChange={handleChange}
-        />
-
-        <input
-          required
-          type="password"
-          className="input-div"
-          placeholder="Password"
-          name="password"
-          value={data.password}
-          onChange={handleChange}
-        />
+        <input required type="text" placeholder="Username" className="input-div" name="username" value={data.username} onChange={handleChange} />
+        <input required type="password" className="input-div" placeholder="Password" name="password" value={data.password} onChange={handleChange} />
 
         {isSignUp && (
-          <input
-            required
-            type="password"
-            className="input-div"
-            name="confirmpass"
-            placeholder="Confirm Password"
-            onChange={handleChange}
-          />
+          <input required type="password" className="input-div" name="confirmpass" placeholder="Confirm Password" onChange={handleChange} />
         )}
 
         <span
@@ -106,8 +74,7 @@ const Auth = () => {
           *Confirm password is not same
         </span>
         <div className="login-div">
-          <span
-            className="link"
+          <span className="link"
             onClick={() => {
               resetForm();
               setIsSignUp((prev) => !prev);
@@ -117,11 +84,7 @@ const Auth = () => {
               ? "Already have an account? Login"
               : "Don't have an account? Sign up"}
           </span>
-          <button
-            className="button login-button"
-            type="Submit"
-            disabled={loading}
-          >
+          <button className="button login-button" type="Submit" disabled={loading}>
             {loading ? "Loading..." : isSignUp ? "SignUp" : "Login"}
           </button>
         </div>

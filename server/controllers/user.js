@@ -1,7 +1,7 @@
-import UserModel from "../models/user.model.js";
+const UserModel = require("../models/user.js");
 
 // Get a User
-export const getUser = async (req, res) => {
+const getUser = async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -19,7 +19,7 @@ export const getUser = async (req, res) => {
 };
 
 // Get all users
-export const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
 
   try {
     let users = await UserModel.find();
@@ -34,7 +34,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 // Delete a user
-export const deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   const id = req.params.id;
 
   const { currentUserId, currentUserAdmin } = req.body;
@@ -50,3 +50,9 @@ export const deleteUser = async (req, res) => {
     res.status(403).json("Access Denied!");
   }
 };
+
+module.exports = {
+  getUser,
+  getAllUsers,
+  deleteUser,
+}

@@ -1,21 +1,15 @@
 
 const initialState = {
-    chatUsers: [],
-    chats: [],
     loading: false,
     error: false
 };
 
 const chatReducer = (state = initialState, action) => {
     switch (action.type) {
-        case "SAVE_USER":
-            return ({ ...state, chatUsers: [...state.chatUsers, action.data] });
-        case "CHAT_LOADING_START":
+        case "LOADING_START":
             return ({ ...state, loading: true });
-        case "CHAT_LOADING_DONE":
+        case "LOADING_DONE":
             return ({ ...state, loading: false });
-        case "FETCH_CHATS":
-            return ({ ...state, chats: action.data });
         default:
             return state
     }

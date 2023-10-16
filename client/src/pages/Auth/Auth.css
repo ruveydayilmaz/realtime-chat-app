@@ -15,7 +15,8 @@
 .input-div {
   margin-bottom: 5px;
   border-style: none;
-  background-color: var(--hrColor);
+  background-color: #34343494;
+  color: white;
   padding: 10px;
   border-radius: 5px;
   width: 200px;

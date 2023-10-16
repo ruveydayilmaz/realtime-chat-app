@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
-import { addMessage, getMessages } from "../api/message.requests";
+import { addMessage } from "../api/message.requests";
+import { getMessages } from '../actions/message.actions';
 
 // EN
 // This is where all the socket functions are stored.
@@ -16,7 +17,7 @@ import { addMessage, getMessages } from "../api/message.requests";
 
 // TR
 // VITE_APP_SERVER_URL, soketin calistigi server'in url'sini tutan env parametresidir.
-const socket = io(import.meta.env.VITE_APP_SERVER_URL);
+const socket = io(import.meta.env.VITE_APP_SOCKET_URL);
 
 const socketFunctions = {
   // EN
@@ -140,7 +141,7 @@ const socketFunctions = {
   // TR
   // Bu fonksiyon, bir konusmanin mesajlarini getirir.
   // Ayrica son mesaj oteki kullanicininsa mesaji 'goruldu' olarak isaretler.
-  fetchMessages: async (user, chat, setMessages, currentUser) => {
+  fetchMessages: async (user, chat, setMessages, currentUser, dispatch) => {
     try {
       if(chat) {
         // EN
@@ -148,7 +149,7 @@ const socketFunctions = {
 
         // TR
         // 
-        const { data } = await getMessages(chat._id);
+        const data = await dispatch(getMessages(chat._id));
         setMessages(data);
 
         // EN
@@ -223,6 +224,30 @@ const socketFunctions = {
       chatId: chat._id,
       createdAt: new Date(),
     });
+
+    try {
+      const { data } = await addMessage({
+        chatId: chat._id,
+        senderId: currentUser,
+        file: file,
+      });
+      setMessages([...messages, { ...data, createdAt: new Date() }]);
+      setNewMessage("");
+    } catch {
+      console.log("error");
+    }
+  },
+
+  callUser: async (event, chat, setSelectedFile, setMessages, currentUser, setNewMessage, messages) => {
+    const file = event.target.files[0];
+    setSelectedFile(file);
+
+    const receiverId = chat.members.find((id) => id !== currentUser);
+		socket.on("call-user", (data) => {
+			setReceivingCall(true);
+			setCaller(data.from);
+			setCallerSignal(data.signal);
+		})
 
     try {
       const { data } = await addMessage({

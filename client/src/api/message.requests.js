@@ -1,8 +1,16 @@
 import axios from 'axios'
 
-const API = axios.create({ baseURL: import.meta.env.VITE_APP_SERVER_URL });
+const API = axios.create({ baseURL: `${import.meta.env.VITE_APP_SERVER_URL}` });
 
-export const getMessages = (id) => API.get(`/message/${id}`);
+API.interceptors.request.use((req) => {
+    if (localStorage.getItem('profile')) {
+        req.headers.Authorization = `Bearer ${JSON.parse(localStorage.getItem('profile')).data[0]?.accessToken}`;
+    }
+
+    return req;
+});
+
+export const getMessages = (id) => API.get(`/message/${id}?orderAsc=1`);
 
 export const addMessage = (data) => API.post('/message/', data,
     {
